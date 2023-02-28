@@ -2,7 +2,6 @@ const puppeteer = require('puppeteer');
 const csv = require('csv-parser');
 const fs = require('fs');
 
-const MAX_ROWS = 10;
 const CSV_PATH = 'productURLs.csv';
 
 const objects = [];
@@ -11,42 +10,42 @@ const results = [];
 
 (async () => {
 
-fs.createReadStream(CSV_PATH)
-  .pipe(csv())
-  .on('data', (data) => {
-    objects.push(data);
-  })
-  .on('end', async () => {
+  fs.createReadStream(CSV_PATH)
+    .pipe(csv())
+    .on('data', (data) => {
+      objects.push(data);
+    })
+    .on('end', async () => {
 
-    for (let i = 200; i < 500; i++) {
-        const object = objects[i];
-        urls.push(Object.values(object)[0]);
-    }
+      for (let i = 200; i < 500; i++) {
+          const object = objects[i];
+          urls.push(Object.values(object)[0]);
+      }
 
-    console.log(urls)
+      console.log(urls)
 
-    const browser = await puppeteer.launch();
-    const page = await browser.newPage();
+      const browser = await puppeteer.launch();
+      const page = await browser.newPage();
 
-    // Loop through each URL and extract the product name inside the h3 tag
-    for (const url of urls) {
-    console.log(url)
-    await page.goto(url, {waitUntil: 'load', timeout: 0});
-    const content = await page.$eval('h3.cw-product-h1-header', el => el.textContent.trim());
-    results.push({ url, content });
-    }
+      // Loop through each URL and extract the product name inside the h3 tag
+      for (const url of urls) {
+      console.log(url)
+      await page.goto(url, {waitUntil: 'load', timeout: 0});
+      const content = await page.$eval('h3.cw-product-h1-header', el => el.textContent.trim());
+      results.push({ url, content });
+      }
 
-    // Save the results to a CSV file
-    const csvData = results.map(row => [row.url, row.content].join(',')).join('\n');
-    // fs.writeFile for first time. 
-    fs.appendFile('output.csv', `\n${csvData}`, err => {
-    if (err) throw err;
-    console.log('Results saved to output.csv');
+      // Save the results to a CSV file
+      const csvData = results.map(row => [row.url, row.content].join(',')).join('\n');
+      // fs.writeFile for first time. 
+      fs.appendFile('output.csv', `\n${csvData}`, err => {
+      if (err) throw err;
+      console.log('Results saved to output.csv');
+      });
+
+      await browser.close();
+
     });
-
-    await browser.close();
-
-  });
 
 })();
 
